@@ -42,10 +42,28 @@ export class RoboflowService {
   }
 
   static async predictMaterialFromBase64(base64Image: string): Promise<RoboflowPrediction | RoboflowError> {
+    // Helper to convert image URL to base64
+    async function urlToBase64(url: string): Promise<string> {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          // Remove data URL prefix
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
     try {
-      // Extract only the base64 part if it's a data URL
       let base64 = base64Image;
-      if (base64.startsWith('data:')) {
+      // If input is a URL, convert to base64
+      if (base64.startsWith('http://') || base64.startsWith('https://')) {
+        base64 = await urlToBase64(base64);
+      } else if (base64.startsWith('data:')) {
         base64 = base64.split(',')[1];
       }
       const response = await fetch(`${ROBOFLOW_MODEL_URL}?api_key=${ROBOFLOW_API_KEY}`, {
