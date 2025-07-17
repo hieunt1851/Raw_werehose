@@ -66,6 +66,7 @@ export interface SavedItem {
   timestamp: Date;
   standardImage: string;
   capturedImage: string;
+  item_id?: number;
 }
 
 export type ToastType = 'success' | 'danger' | 'warning' | 'info';
@@ -84,4 +85,5 @@ export interface PhotoAnalysis {
   standardImage: string;
   capturedImage: string;
   analysisFailed?: boolean;
+  item_id?: number;
 } 

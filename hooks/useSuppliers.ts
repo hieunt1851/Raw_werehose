@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Supplier } from '@/types';
-import { supplierApi } from '@/services/api';
+import { supplierApi } from '@/services/remoteApi';
 
 export function useSuppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);

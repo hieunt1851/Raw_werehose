@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Supplier, ApiPurchaseOrderResponse, ApiOrder, ApiOrderItem } from '@/types';
-import { supplierApi, purchaseOrderApi } from '@/services/api';
+import { supplierApi, purchaseOrderApi } from '@/services/remoteApi';
 import { getYesterdayDate } from '@/utils/date';
 
 export function usePurchaseOrders(date: string = getYesterdayDate()) {

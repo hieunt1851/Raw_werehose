@@ -23,7 +23,8 @@ export function useWarehouse() {
       colorDiff: analysis.colorDiff,
       timestamp: new Date(),
       standardImage: analysis.standardImage,
-      capturedImage: analysis.capturedImage
+      capturedImage: analysis.capturedImage,
+      item_id: analysis.item_id
     };
     
     setSavedItems(prev => [...prev, savedItem]);

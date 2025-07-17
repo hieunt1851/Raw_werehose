@@ -1,26 +1,224 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Camera, Check, Bug, Upload, X } from 'lucide-react';
-import { RawMaterial, PhotoAnalysis, ApiOrderItem } from '@/types';
+import { Camera, Check, Bug, Upload, X, CircuitBoard, AlertTriangle } from 'lucide-react';
+import { RawMaterial, PhotoAnalysis, ApiOrderItem, ApiOrder, SavedItem } from '@/types';
 import { po_meat, po_seafood } from '@/data/materials';
 import { numberRandom } from '@/utils/toast';
 import { RoboflowService, RoboflowPrediction } from '@/services/roboflow';
-import { analyzeImage } from '@/services/api';
+import { analyzeImage, captureLocalImage } from '@/services/localApi';
+import { saveProductPOResult, receiveAllPOResult } from '@/services/remoteApi';
+import { Modal } from 'react-bootstrap';
+import React from 'react'; // Added for useEffect
 
 interface SensorCardProps {
   currentSupplier: string;
   onPhotoAnalysis: (analysis: PhotoAnalysis) => void;
   apiOrderItems?: ApiOrderItem[];
+  apiOrders?: ApiOrder[];
+  savedItems: SavedItem[];
+  weight: string;
 }
 
-export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [] }: SensorCardProps) {
+function SaveAllModal({ show, onClose, savedItems, apiOrders }: { show: boolean; onClose: () => void; savedItems: SavedItem[]; apiOrders?: ApiOrder[] }) {
+  // Group items by product_id and calculate aggregated data
+  const aggregatedItems = savedItems.reduce((acc, item, index) => {
+    const productId = item.material.id;
+    if (!acc[productId]) {
+      acc[productId] = {
+        material: item.material,
+        totalQuantity: 0,
+        totalColorDiff: 0,
+        count: 0,
+        originalIndices: [],
+        firstTimestamp: item.timestamp
+      };
+    }
+    acc[productId].totalQuantity += item.quantity;
+    acc[productId].totalColorDiff += item.colorDiff;
+    acc[productId].count += 1;
+    acc[productId].originalIndices.push(index);
+    return acc;
+  }, {} as Record<number, {
+    material: RawMaterial;
+    totalQuantity: number;
+    totalColorDiff: number;
+    count: number;
+    originalIndices: number[];
+    firstTimestamp: Date;
+  }>);
+
+  // Local state for status of each product (1 = Nhập hàng, 0 = Trả hàng)
+  const [statuses, setStatuses] = useState<number[]>(() => Object.keys(aggregatedItems).map(() => 1));
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Update statuses if aggregatedItems length changes
+  React.useEffect(() => {
+    setStatuses(Object.keys(aggregatedItems).map(() => 1));
+  }, [Object.keys(aggregatedItems).length]);
+
+  const handleStatusChange = (productIndex: number, value: number) => {
+    setStatuses(prev => prev.map((s, i) => (i === productIndex ? value : s)));
+  };
+
+  // Find po_id for the current batch (assume all items are from the same po_id)
+  let po_id: number | undefined = undefined;
+  if (apiOrders && apiOrders.length > 0 && savedItems.length > 0) {
+    for (const order of apiOrders) {
+      if (order.po_items.some(item => item.product_id === savedItems[0].material.id)) {
+        po_id = order.po_id;
+        break;
+      }
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!po_id) {
+      (window as any).showToast?.('Không tìm thấy po_id cho các sản phẩm này.', 'danger');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const items = Object.values(aggregatedItems).map((item, idx) => ({
+        product_id: item.material.id,
+        status: statuses[idx]
+      }));
+      const { receiveAllPOResult } = await import('@/services/remoteApi');
+      await receiveAllPOResult({ po_id, items });
+      (window as any).showToast?.('Đã gửi xác nhận hoàn tất lên server.', 'success');
+      onClose();
+    } catch (err) {
+      (window as any).showToast?.('Lỗi khi gửi xác nhận hoàn tất.', 'danger');
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const aggregatedItemsArray = Object.values(aggregatedItems);
+
+  return (
+    <Modal show={show} onHide={onClose} size="lg" centered>
+      <Modal.Header closeButton>
+        <Modal.Title>Xác nhận hoàn tất</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {aggregatedItemsArray.length > 0 ? (
+          <div className="table-responsive">
+            <table className="table table-bordered">
+              <thead className="table-light">
+                <tr>
+                  <th className="text-center">STT</th>
+                  <th className="text-center">NVL</th>
+                  <th className="text-center">Tổng định lượng</th>
+                  <th className="text-center">Đơn vị</th>
+                  <th className="text-center">Số lần đo</th>
+                  <th className="text-center" style={{ fontSize: '10px' }}>
+                    Trung bình <br/> khác biệt màu sắc
+                  </th>
+                  <th className="text-center">Thời gian đầu tiên</th>
+                  <th className="text-center">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {aggregatedItemsArray.map((item, idx) => {
+                  const avgColorDiff = item.totalColorDiff / item.count;
+                  const hasWarning = avgColorDiff > 5 || Math.abs(item.totalQuantity - item.material.quantity * item.count) > 0.1 * item.count;
+                  
+                  return (
+                    <tr key={item.material.id}>
+                      <td className="text-center">{idx + 1}</td>
+                      <td>
+                        <div className="d-flex align-items-center">
+                          <span className="me-2">{item.material.code} - {item.material.name}</span>
+                          {hasWarning && (
+                            <span title="Cần kiểm tra">
+                              <AlertTriangle className="text-warning" size={14} />
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="text-center">
+                        <span className={`fw-bold ${Math.abs(item.totalQuantity - item.material.quantity * item.count) > 0.1 * item.count ? 'text-warning' : 'text-success'}`}>
+                          {item.totalQuantity.toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <span className="fw-bold">{item.material.unit}</span>
+                      </td>
+                      <td className="text-center">
+                        <span className="fw-bold">{item.count}</span>
+                      </td>
+                      <td className="text-center">
+                        <span className={`fw-bold ${avgColorDiff > 5 ? 'text-danger' : 'text-success'}`}>
+                          {avgColorDiff.toFixed(2)}%
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        {item.firstTimestamp.toLocaleString()}
+                      </td>
+                      <td className="text-center">
+                        <div className="d-flex justify-content-center align-items-center gap-2">
+                          <div className="form-check form-check-inline">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name={`status-${idx}`}
+                              id={`status-nhap-${idx}`}
+                              value={1}
+                              checked={statuses[idx] === 1}
+                              onChange={() => handleStatusChange(idx, 1)}
+                            />
+                            <label className="form-check-label" htmlFor={`status-nhap-${idx}`}>Nhập hàng</label>
+                          </div>
+                          <div className="form-check form-check-inline">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name={`status-${idx}`}
+                              id={`status-tra-${idx}`}
+                              value={0}
+                              checked={statuses[idx] === 0}
+                              onChange={() => handleStatusChange(idx, 0)}
+                            />
+                            <label className="form-check-label" htmlFor={`status-tra-${idx}`}>Trả hàng</label>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center text-muted">
+            <div className="py-4">
+              <AlertTriangle className="mb-2" size={48} />
+              <div>Chưa có dữ liệu được lưu trữ</div>
+              <small>Dữ liệu sẽ xuất hiện sau khi phân tích và lưu trữ</small>
+            </div>
+          </div>
+        )}
+      </Modal.Body>
+      <Modal.Footer>
+        <button className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>Đóng</button>
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? 'Đang gửi...' : 'Đồng ý'}
+        </button>
+      </Modal.Footer>
+    </Modal>
+  );
+}
+
+export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [], apiOrders = [], savedItems, weight }: SensorCardProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PhotoAnalysis | null>(null);
   const [currentImage, setCurrentImage] = useState('/images/no_photo.png');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showSaveAllModal, setShowSaveAllModal] = useState(false);
 
   // Convert API order items to RawMaterial format for compatibility
   const convertApiItemToMaterial = (item: ApiOrderItem): RawMaterial & { product_photo?: string } => {
@@ -69,8 +267,21 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
     setIsAnalyzing(true);
     
     try {
-      // Use the captured image for AI prediction
-      const imageToAnalyze = uploadedImage || `/images/${currentSupplier}/sample.jpg`;
+      let imageToAnalyze: string;
+      let isImageLink = false;
+      // If no uploaded image, capture from local camera
+      if (!uploadedImage) {
+        try {
+          imageToAnalyze = await captureLocalImage();
+          isImageLink = true;
+        } catch (err) {
+          (window as any).showToast?.('Không thể chụp ảnh từ camera.', 'danger');
+          setIsAnalyzing(false);
+          return;
+        }
+      } else {
+        imageToAnalyze = uploadedImage;
+      }
       
       // Call Roboflow API for prediction
       const prediction = await RoboflowService.predictMaterialFromBase64(imageToAnalyze);
@@ -112,9 +323,9 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
       
       // --- Call local analysis API for color difference ---
       const url1 = (predictedMaterial as any).product_photo || '/images/no_photo.png';
-      const base2 = uploadedImage?.startsWith('data:') ? uploadedImage.split(',')[1] : '';
+      const base2 = !isImageLink && uploadedImage?.startsWith('data:') ? uploadedImage.split(',')[1] : '';
       const product_kind = predictedMaterial.code;
-      const mode = 'image_link';
+      const mode = isImageLink ? 'image_link' : 'base64';
       let colorDiff = 0;
       let analysisFailed = false;
       
@@ -130,10 +341,13 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
       }
       // --- End local analysis API ---
 
+      // Use live weight if available, else fallback
+      let usedWeight = (parseFloat(weight) ? parseFloat(weight) / 1000 : undefined) || (predictedMaterial.quantity + (Math.random() - 0.5) * 0.2);
+
       // Create analysis result
       const newAnalysis: PhotoAnalysis = {
         predictedMaterial: predictedMaterial,
-        quantity: predictedMaterial.quantity + (Math.random() - 0.5) * 0.2,
+        quantity: usedWeight,
         colorDiff,
         standardImage: url1,
         capturedImage: imageToAnalyze,
@@ -153,7 +367,7 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
       
       const newAnalysis: PhotoAnalysis = {
         predictedMaterial: randomMaterial,
-        quantity: randomMaterial.quantity + (Math.random() - 0.5) * 0.2,
+        quantity: (parseFloat(weight) ? parseFloat(weight) / 1000 : undefined) || (randomMaterial.quantity + (Math.random() - 0.5) * 0.2),
         colorDiff: Math.random() * 10,
         standardImage: `/images/${currentSupplier}/${randomMaterial.slug}.jpg`,
         capturedImage: uploadedImage || `/images/${currentSupplier}/${randomMaterial.slug}.jpg`
@@ -214,13 +428,72 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
     (window as any).showToast?.('Đã xóa ảnh đã tải.', 'info');
   };
 
-  const confirmAnalysis = () => {
-    if (analysis) {
+  const confirmAnalysis = async () => {
+    if (!analysis) return;
+
+    // Find po_id for the selected product_id
+    let po_id: number | undefined;
+    if (apiOrders && apiOrders.length > 0) {
+      for (const order of apiOrders) {
+        if (order.po_items.some(item => item.product_id === analysis.predictedMaterial.id)) {
+          po_id = order.po_id;
+          break;
+        }
+      }
+    }
+    if (!po_id) {
+      (window as any).showToast?.('Không tìm thấy po_id cho sản phẩm này.', 'danger');
+      return;
+    }
+
+    // Convert base64 image to Blob
+    function dataURLtoBlob(dataurl: string) {
+      const arr = dataurl.split(','), match = arr[0].match(/:(.*?);/), mime = match ? match[1] : '', bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+      for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
+      return new Blob([u8arr], { type: mime });
+    }
+    let photoFile: File | null = null;
+    if (analysis.capturedImage && analysis.capturedImage.startsWith('data:')) {
+      const blob = dataURLtoBlob(analysis.capturedImage);
+      photoFile = new File([blob], 'photo.jpg', { type: blob.type });
+    } else {
+      (window as any).showToast?.('Không có hình chụp hợp lệ để upload.', 'danger');
+      return;
+    }
+
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('po_id', String(po_id));
+    formData.append('product_id', String(analysis.predictedMaterial.id));
+    formData.append('weight', String(analysis.quantity));
+    formData.append('photo', photoFile);
+    formData.append('color', String(analysis.colorDiff || 0));
+    // Optionally add fat_percentage, meat_percentage if available
+
+    try {
+      const apiResult = await saveProductPOResult({
+        po_id,
+        product_id: analysis.predictedMaterial.id,
+        weight: analysis.quantity,
+        photo: photoFile,
+        color: analysis.colorDiff || 0
+        // Add fat_percentage, meat_percentage if available
+      });
+      const item_id = apiResult?.item?.item_id;
+      if (item_id) {
+        analysis.item_id = item_id;
+      }
+      (window as any).showToast?.('Đã lưu thông tin phân tích & gửi lên server.', 'success');
+      console.log('formData', formData);
+      console.log('po_id', po_id);
+      console.log('analysis', analysis);
       onPhotoAnalysis(analysis);
       setAnalysis(null);
       setCurrentImage('/images/no_photo.png');
       setUploadedImage(null);
-      (window as any).showToast?.('Đã lưu thông tin phân tích.', 'success');
+    } catch (err) {
+      (window as any).showToast?.('Lỗi khi gửi dữ liệu lên server.', 'danger');
+      console.error(err);
     }
   };
 
@@ -390,7 +663,7 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
       <div className="card-footer">
         <div className="d-flex justify-content-between">
           <div></div>
-          <button type="button" className="btn btn-dark">
+          <button type="button" className="btn btn-dark" onClick={() => setShowSaveAllModal(true)}>
             <i className="fas fa-save me-2"></i>
             Hoàn tất quy trình
           </button>
@@ -405,6 +678,7 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
         onChange={handleImageUpload}
         style={{ display: 'none' }}
       />
+      <SaveAllModal show={showSaveAllModal} onClose={() => setShowSaveAllModal(false)} savedItems={savedItems} apiOrders={apiOrders} />
     </div>
   );
 } 

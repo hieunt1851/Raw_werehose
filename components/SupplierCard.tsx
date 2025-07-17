@@ -6,20 +6,27 @@ import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { po_meat, po_seafood, po_meat_orders, po_seafood_orders } from '@/data/materials';
 import { RawMaterial, PurchaseOrder, ApiOrder } from '@/types';
 import { getYesterdayDate, formatDate } from '@/utils/date';
-import { getPurchaseOrderDetailsBySupplierAndDate } from '@/services/api';
+import { getPurchaseOrderDetailsBySupplierAndDate, getProductPOResults } from '@/services/remoteApi';
+import { SavedDataCard } from './SavedDataCard';
 
 interface SupplierCardProps {
   currentSupplier: string;
   onSupplierChange: (supplier: string) => void;
   onMaterialsChange: (materials: RawMaterial[]) => void;
+  onClearSavedItems: () => void;
+  hasSavedItems: boolean;
 }
 
-export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsChange }: SupplierCardProps) {
+export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsChange, onClearSavedItems, hasSavedItems }: SupplierCardProps) {
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [selectedDate, setSelectedDate] = useState(getYesterdayDate());
   const [detailedOrderData, setDetailedOrderData] = useState<any>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
+  const [pendingSupplier, setPendingSupplier] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [externalSavedItems, setExternalSavedItems] = useState<any[]>([]);
+  const [externalProductInfo, setExternalProductInfo] = useState<{ code: string; name: string } | null>(null);
   
   const { 
     suppliersWithOrders, 
@@ -32,8 +39,13 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
   } = usePurchaseOrders(selectedDate);
 
   const handleSupplierChange = (supplierCode: string) => {
+    if (currentSupplier && currentSupplier !== supplierCode && hasSavedItems) {
+      setPendingSupplier(supplierCode);
+      setShowConfirmModal(true);
+      return;
+    }
     if (currentSupplier && currentSupplier !== supplierCode) {
-      // Remove confirm dialog, always change supplier and update materials
+      onClearSavedItems();
       onSupplierChange(supplierCode);
       const supplier = suppliersWithOrders.find(s => s.code === supplierCode);
       if (supplier) {
@@ -78,6 +90,39 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
     }
   };
 
+  const handleConfirmChange = () => {
+    if (pendingSupplier) {
+      onClearSavedItems();
+      onSupplierChange(pendingSupplier);
+      const supplier = suppliersWithOrders.find(s => s.code === pendingSupplier);
+      if (supplier) {
+        const orders = getOrdersBySupplier(supplier.id);
+        const materials = getOrderItems(orders).map(item => ({
+          id: item.product_id,
+          code: item.product_code,
+          name: item.product_name,
+          unit: item.unit_name,
+          quantity: parseFloat(item.quantity),
+          diff: 2,
+          slug: item.product_code.toLowerCase().replace(/\s+/g, '_'),
+          between: `${(parseFloat(item.quantity) * 0.98).toFixed(2)} -> ${(parseFloat(item.quantity) * 1.02).toFixed(2)}`,
+          real: parseFloat(item.quantity),
+          product_photo: item.product_photo
+        }));
+        onMaterialsChange(materials);
+      } else {
+        onMaterialsChange([]);
+      }
+    }
+    setShowConfirmModal(false);
+    setPendingSupplier(null);
+  };
+
+  const handleCancelChange = () => {
+    setShowConfirmModal(false);
+    setPendingSupplier(null);
+  };
+
   const viewOrderDetails = async () => {
     if (!currentSupplier) {
       (window as any).showToast?.('Vui lòng chọn nhà cung cấp trước khi xem chi tiết đơn hàng.', 'danger');
@@ -102,6 +147,19 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
     }
   };
 
+  // Handler for clicking Mã SP
+  const handleProductCellClick = async (po_id: number, product_id: number, code: string, name: string) => {
+    try {
+      const results = await getProductPOResults(po_id, product_id);
+      setExternalSavedItems(results);
+      setExternalProductInfo({ code, name });
+    } catch (err) {
+      setExternalSavedItems([]);
+      setExternalProductInfo(null);
+      (window as any).showToast?.('Lỗi khi tải dữ liệu sản phẩm.', 'danger');
+    }
+  };
+
   const currentSupplierData = suppliersWithOrders.find(s => s.code === currentSupplier);
   const currentMaterials = currentSupplier === 'meat' ? po_meat : po_seafood;
   const currentOrders = currentSupplier === 'meat' ? po_meat_orders : po_seafood_orders;
@@ -114,6 +172,14 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
 
   const apiOrders = getApiOrdersForSupplier();
   const apiOrderItems = getOrderItems(apiOrders);
+
+  // Build a mapping from product_id to po_id
+  const productIdToPoId: Record<number, number> = {};
+  apiOrders.forEach(order => {
+    order.po_items.forEach((item: any) => {
+      productIdToPoId[item.product_id] = order.po_id;
+    });
+  });
 
   return (
     <>
@@ -262,7 +328,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
                   {apiOrderItems.map((item: any, index: number) => (
                     <tr key={`${item.product_id}-${index}`}>
                       <td className="text-center">{index + 1}</td>
-                      <td className="text-center">{item.product_code}</td>
+                      <td className="text-center text-primary cursor-pointer" style={{textDecoration: 'underline'}} onClick={() => handleProductCellClick(productIdToPoId[item.product_id], item.product_id, item.product_code, item.product_name)}>{item.product_code}</td>
                       <td className="text-center">{item.product_name}</td>
                       <td className="text-center">{parseFloat(item.quantity).toFixed(2)}</td>
                       <td className="text-center">{item.unit_name}</td>
@@ -382,6 +448,38 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Xác nhận thay đổi nhà cung cấp</h5>
+                <button type="button" className="btn-close" onClick={handleCancelChange}></button>
+              </div>
+              <div className="modal-body">
+                <p>Bạn có Thông tin đã lưu trữ. Bạn có chắc chắn muốn đổi nhà cung cấp không?</p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleCancelChange}>Huỷ</button>
+                <button type="button" className="btn btn-danger" onClick={handleConfirmChange}>Đồng ý đổi nhà cung cấp</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Show external product PO results if available */}
+      {externalSavedItems.length > 0 && externalProductInfo && (
+        <div className="mt-4">
+          <SavedDataCard
+            savedItems={[]}
+            externalSavedItems={externalSavedItems}
+            externalProductInfo={externalProductInfo}
+          />
         </div>
       )}
     </>
