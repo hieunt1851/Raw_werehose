@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://ai.block8910.com/api/dev/:path*"
+    }
+  ]
+} 

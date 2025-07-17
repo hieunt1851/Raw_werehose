@@ -1,6 +1,6 @@
 import { Supplier, ApiPurchaseOrderResponse, ApiOrder, ApiOrderItem } from '@/types';
 
-const API_BASE_URL = 'https://ai.block8910.com/api/dev';
+const API_BASE_URL = '/api';
 
 interface ApiSupplier {
   id: number;
