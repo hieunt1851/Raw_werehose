@@ -435,9 +435,11 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
   };
 
   const confirmAnalysis = async () => {
-    if (!analysis) return;
+    if (!analysis) 
+      return;
 
     // Find po_id for the selected product_id
+
     let po_id: number | undefined;
     if (apiOrders && apiOrders.length > 0) {
       for (const order of apiOrders) {
@@ -459,10 +461,28 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
       return new Blob([u8arr], { type: mime });
     }
     let photoFile: File | null = null;
-    if (analysis.capturedImage && analysis.capturedImage.startsWith('data:')) {
-      const blob = dataURLtoBlob(analysis.capturedImage);
+    if (analysis.capturedImage) {
+      let dataUrl = analysis.capturedImage;
+      if (!dataUrl.startsWith('data:')) {
+        // If it's a link, fetch and convert to data URL
+        try {
+          const response = await fetch(analysis.capturedImage);
+          const blob = await response.blob();
+          dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        } catch (err) {
+          (window as any).showToast?.('Không thể tải hình chụp từ link.', 'danger');
+          return;
+        }
+      }
+      const blob = dataURLtoBlob(dataUrl);
       photoFile = new File([blob], 'photo.jpg', { type: blob.type });
     } else {
+      
       (window as any).showToast?.('Không có hình chụp hợp lệ để upload.', 'danger');
       return;
     }
