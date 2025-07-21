@@ -60,45 +60,45 @@ export const po_meat_orders: PurchaseOrder[] = [
 ];
 
 export const po_seafood: RawMaterial[] = [
-  { 
-    id: 1, 
-    code: 'NVL_HS004', 
-    name: 'Tôm sú', 
-    unit: 'kg', 
-    quantity: 5.00, 
-    diff: 2, 
-    slug: 'tom_su', 
-    between: '4.90 -> 5.10', 
-    real: 5.30 
-  },
-  { 
-    id: 2, 
-    code: 'NVL_HS005', 
-    name: 'Mực lá', 
-    unit: 'kg', 
-    quantity: 8.00, 
-    diff: 3, 
-    slug: 'muc_la', 
-    between: '7.76 -> 8.24', 
-    real: 8.20 
-  },
+  // { 
+  //   id: 1, 
+  //   code: 'NVL_HS004', 
+  //   name: 'Tôm sú', 
+  //   unit: 'kg', 
+  //   quantity: 5.00, 
+  //   diff: 2, 
+  //   slug: 'tom_su', 
+  //   between: '4.90 -> 5.10', 
+  //   real: 5.30 
+  // },
+  // { 
+  //   id: 2, 
+  //   code: 'NVL_HS005', 
+  //   name: 'Mực lá', 
+  //   unit: 'kg', 
+  //   quantity: 8.00, 
+  //   diff: 3, 
+  //   slug: 'muc_la', 
+  //   between: '7.76 -> 8.24', 
+  //   real: 8.20 
+  // },
 ];
 
 export const po_seafood_orders: PurchaseOrder[] = [
-  {
-    code: '20250707ORDER004',
-    items: [
-      { code: 'NVL_HS004', name: 'Tôm sú', unit: 'kg', quantity: 1.00 },
-      { code: 'NVL_HS005', name: 'Mực lá', unit: 'kg', quantity: 2.00 },
-    ],
-  },
-  {
-    code: '20250707ORDER005',
-    items: [
-      { code: 'NVL_HS004', name: 'Tôm sú', unit: 'kg', quantity: 4.00 },
-      { code: 'NVL_HS005', name: 'Mực lá', unit: 'kg', quantity: 6.00 },
-    ],
-  },
+  // {
+  //   code: '20250707ORDER004',
+  //   items: [
+  //     { code: 'NVL_HS004', name: 'Tôm sú', unit: 'kg', quantity: 1.00 },
+  //     { code: 'NVL_HS005', name: 'Mực lá', unit: 'kg', quantity: 2.00 },
+  //   ],
+  // },
+  // {
+  //   code: '20250707ORDER005',
+  //   items: [
+  //     { code: 'NVL_HS004', name: 'Tôm sú', unit: 'kg', quantity: 4.00 },
+  //     { code: 'NVL_HS005', name: 'Mực lá', unit: 'kg', quantity: 6.00 },
+  //   ],
+  // },
 ];
 
 // Legacy static suppliers (fallback)

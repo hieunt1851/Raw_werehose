@@ -188,6 +188,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
           <div className="d-flex justify-content-between">
             <h5 className="card-title">Thông tin nhà cung cấp</h5>
             <div className="d-flex gap-2">
+              {/*
               <div className="d-flex align-items-center gap-2">
                 <Calendar size={16} />
                 <input 
@@ -199,6 +200,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
                   title={`Đơn hàng ngày: ${formatDate(selectedDate)}`}
                 />
               </div>
+              */}
               <button 
                 type="button" 
                 className="btn btn-sm btn-outline-secondary" 
@@ -243,6 +245,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
             </div>
           ) : (
             <>
+              {/*
               {purchaseOrders && (
                 <div className="alert alert-info mb-3">
                   <strong>Warehouse:</strong> {purchaseOrders.warehouse_name} ({purchaseOrders.warehouse_code})<br/>
@@ -251,6 +254,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
                   <strong>Date:</strong> {formatDate(selectedDate)}
                 </div>
               )}
+              */}
 
               <div className="d-flex justify-content-between mt-1">
                 <div>Mã NCC</div>
