@@ -94,9 +94,21 @@ export function subscribeWeightStream(onWeight: (weight: string) => void, onErro
   return () => eventSource.close();
 }
 
+export function getRtspUrl(): string {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('rtspUrl') || 'rtsp://169.254.140.61:554';
+  }
+  return 'rtsp://169.254.140.61:554';
+}
+export function setRtspUrl(url: string) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('rtspUrl', url);
+  }
+}
 // Capture image from local camera
 export async function captureLocalImage(): Promise<string> {
-  const response = await fetch(`${getLocalApiBaseUrl()}/capture-image?mode=rtsp&rtsp_url=rtsp://169.254.140.61:554`, { method: 'GET' });
+  const rtspUrl = getRtspUrl();
+  const response = await fetch(`${getLocalApiBaseUrl()}/capture-image?mode=rtsp&rtsp_url=${encodeURIComponent(rtspUrl)}`, { method: 'GET' });
   if (!response.ok) throw new Error('Failed to capture image');
   const data = await response.json();
   if (!data.success || !data.image_url) throw new Error('Capture failed');

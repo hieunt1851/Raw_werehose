@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { listSerialPorts, connectSerialPort, subscribeWeightStream, getLocalApiBaseUrl, setLocalApiBaseUrl } from '@/services/localApi';
+import { listSerialPorts, connectSerialPort, subscribeWeightStream, getLocalApiBaseUrl, setLocalApiBaseUrl, getRtspUrl, setRtspUrl } from '@/services/localApi';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -25,6 +25,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, w
   const [weightStreamUnsub, setWeightStreamUnsub] = useState<(() => void) | null>(null);
   const [localApiUrl, setLocalApiUrl] = useState(() =>
     typeof window !== 'undefined' ? (getLocalApiBaseUrl() || 'http://100.117.1.111:5000') : ''
+  );
+  const [rtspUrl, setRtspUrlState] = useState(() =>
+    typeof window !== 'undefined' ? (getRtspUrl() || 'rtsp://169.254.140.61:554') : ''
   );
 
   useEffect(() => {
@@ -70,6 +73,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, w
     }
   };
 
+  const handleRtspUrlSave = () => {
+    setRtspUrl(rtspUrl);
+    if (typeof window !== 'undefined' && (window as any).showToast) {
+      (window as any).showToast('Đã lưu RTSP URL!', 'success');
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -81,6 +91,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, w
             <button type="button" className="btn-close" onClick={onClose}></button>
           </div>
           <div className="modal-body">
+            {/* RTSP Camera URL setting */}
+            <div className="mb-3">
+              <label className="form-label">RTSP Camera URL</label>
+              <input
+                type="text"
+                className="form-control"
+                value={rtspUrl}
+                onChange={e => setRtspUrlState(e.target.value)}
+              />
+              <button className="btn btn-success mt-2" onClick={handleRtspUrlSave}>
+                Lưu RTSP URL
+              </button>
+            </div>
             {/* Local API URL setting */}
             <div className="mb-3">
               <label className="form-label">Địa chỉ Local API</label>
