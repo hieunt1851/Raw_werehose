@@ -1,9 +1,9 @@
 // Local analysis API for color difference analysis
 export function getLocalApiBaseUrl(): string {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('localApiBaseUrl') || 'tastevn-ai-services.ig3.ai';
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('vercel.app')) {
+    return '/proxy-ai-services';
   }
-  return 'tastevn-ai-services.ig3.ai';
+  return localStorage.getItem('localApiBaseUrl') || 'https://tastevn-ai-services.ig3.ai';
 }
 export function setLocalApiBaseUrl(url: string) {
   if (typeof window !== 'undefined') {
