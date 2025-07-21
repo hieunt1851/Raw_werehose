@@ -1,5 +1,5 @@
 const ROBOFLOW_API_KEY = 'uYUCzsUbWxWRrO15iar5';
-const ROBOFLOW_MODEL_URL = 'http://171.244.46.137:9001/raw-meat/1';
+const ROBOFLOW_MODEL_URL = '/proxy-raw-meat/1';
 
 export interface RoboflowPrediction {
   predictions: Array<{

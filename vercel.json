@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://ai.block8910.com/api/dev/:path*"
+    },
+    {
+      "source": "/proxy-raw-meat/:path*",
+      "destination": "http://171.244.46.137:9001/raw-meat/:path*"
     }
   ]
 } 
