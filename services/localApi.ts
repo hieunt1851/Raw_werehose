@@ -1,9 +1,9 @@
 // Local analysis API for color difference analysis
 export function getLocalApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('localApiBaseUrl') || 'http://100.117.1.111:5000';
+    return localStorage.getItem('localApiBaseUrl') || 'tastevn-ai-services.ig3.ai';
   }
-  return 'http://100.117.1.111:5000';
+  return 'tastevn-ai-services.ig3.ai';
 }
 export function setLocalApiBaseUrl(url: string) {
   if (typeof window !== 'undefined') {
