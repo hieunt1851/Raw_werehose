@@ -323,14 +323,20 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
       
       // --- Call local analysis API for color difference ---
       const url1 = (predictedMaterial as any).product_photo || '/images/no_photo.png';
-      const base2 = !isImageLink && uploadedImage?.startsWith('data:') ? uploadedImage.split(',')[1] : '';
-      const product_kind = predictedMaterial.code;
-      const mode = isImageLink ? 'image_link' : 'base64';
       let colorDiff = 0;
       let analysisFailed = false;
-      
+      let analysisRequest: any = {
+        url1,
+        product_kind: predictedMaterial.code,
+        mode: 'image_link'
+      };
+      if (isImageLink) {
+        analysisRequest.url2 = imageToAnalyze;
+      } else if (uploadedImage?.startsWith('data:')) {
+        analysisRequest.base2 = uploadedImage.split(',')[1];
+      }
       try {
-        const analysisResult = await analyzeImage({ url1, base2, product_kind, mode });
+        const analysisResult = await analyzeImage(analysisRequest);
         if (typeof analysisResult.color_difference === 'number') {
           colorDiff = analysisResult.color_difference;
         }

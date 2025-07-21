@@ -1,7 +1,19 @@
 // Local analysis API for color difference analysis
+export function getLocalApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('localApiBaseUrl') || 'http://100.117.1.111:5000';
+  }
+  return 'http://100.117.1.111:5000';
+}
+export function setLocalApiBaseUrl(url: string) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('localApiBaseUrl', url);
+  }
+}
 export interface AnalysisRequest {
   url1: string;
-  base2: string;
+  url2?: string;
+  base2?: string;
   product_kind: string;
   mode: string;
 }
@@ -15,12 +27,22 @@ export async function analyzeImage(request: AnalysisRequest): Promise<AnalysisRe
   // Create AbortController for timeout
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
-
   try {
-    const response = await fetch('http://127.0.0.1:5000/analyze', {
+    // Prepare request body: include url2 if present, else base2
+    const body: any = {
+      url1: request.url1,
+      product_kind: request.product_kind,
+      mode: request.mode
+    };
+    if (request.url2) {
+      body.url2 = request.url2;
+    } else if (request.base2) {
+      body.base2 = request.base2;
+    }
+    const response = await fetch(`${getLocalApiBaseUrl()}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
+      body: JSON.stringify(body),
       signal: controller.signal
     });
     
@@ -45,13 +67,13 @@ export async function analyzeImage(request: AnalysisRequest): Promise<AnalysisRe
 
 // Serial port API functions (for settings popup)
 export async function listSerialPorts() {
-  const response = await fetch('http://127.0.0.1:5000/ports');
+  const response = await fetch(`${getLocalApiBaseUrl()}/ports`);
   if (!response.ok) throw new Error('Failed to fetch serial ports');
   return response.json();
 }
 
 export async function connectSerialPort(port: string, baudRate: number) {
-  const response = await fetch('http://127.0.0.1:5000/connect', {
+  const response = await fetch(`${getLocalApiBaseUrl()}/connect`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ port, baud_rate: baudRate })
@@ -61,7 +83,7 @@ export async function connectSerialPort(port: string, baudRate: number) {
 }
 
 export function subscribeWeightStream(onWeight: (weight: string) => void, onError?: (err: any) => void) {
-  const eventSource = new EventSource('http://127.0.0.1:5000/weight');
+  const eventSource = new EventSource(`${getLocalApiBaseUrl()}/weight`);
   eventSource.onmessage = (event) => {
     onWeight(event.data);
   };
@@ -74,7 +96,7 @@ export function subscribeWeightStream(onWeight: (weight: string) => void, onErro
 
 // Capture image from local camera
 export async function captureLocalImage(): Promise<string> {
-  const response = await fetch('http://127.0.0.1:5000/capture-image', { method: 'GET' });
+  const response = await fetch('http://100.117.1.111:5000/capture-image?mode=rtsp&rtsp_url=rtsp://169.254.140.61:554', { method: 'GET' });
   if (!response.ok) throw new Error('Failed to capture image');
   const data = await response.json();
   if (!data.success || !data.image_url) throw new Error('Capture failed');

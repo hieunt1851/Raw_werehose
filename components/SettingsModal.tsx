@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { listSerialPorts, connectSerialPort, subscribeWeightStream } from '@/services/localApi';
+import { listSerialPorts, connectSerialPort, subscribeWeightStream, getLocalApiBaseUrl, setLocalApiBaseUrl } from '@/services/localApi';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -23,6 +23,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, w
   const [error, setError] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [weightStreamUnsub, setWeightStreamUnsub] = useState<(() => void) | null>(null);
+  const [localApiUrl, setLocalApiUrl] = useState(() =>
+    typeof window !== 'undefined' ? (getLocalApiBaseUrl() || 'http://100.117.1.111:5000') : ''
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -60,6 +63,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, w
     }
   };
 
+  const handleApiUrlSave = () => {
+    setLocalApiBaseUrl(localApiUrl);
+    if (typeof window !== 'undefined' && (window as any).showToast) {
+      (window as any).showToast('Đã lưu link API local!', 'success');
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -71,6 +81,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, w
             <button type="button" className="btn-close" onClick={onClose}></button>
           </div>
           <div className="modal-body">
+            {/* Local API URL setting */}
+            <div className="mb-3">
+              <label className="form-label">Địa chỉ Local API</label>
+              <input
+                type="text"
+                className="form-control"
+                value={localApiUrl}
+                onChange={e => setLocalApiUrl(e.target.value)}
+              />
+              <button className="btn btn-success mt-2" onClick={handleApiUrlSave}>
+                Lưu địa chỉ API
+              </button>
+            </div>
             <div className="mb-3">
               <label className="form-label">Chọn cổng Serial</label>
               <select
