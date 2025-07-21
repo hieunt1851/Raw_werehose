@@ -96,7 +96,7 @@ export function subscribeWeightStream(onWeight: (weight: string) => void, onErro
 
 // Capture image from local camera
 export async function captureLocalImage(): Promise<string> {
-  const response = await fetch('http://100.117.1.111:5000/capture-image?mode=rtsp&rtsp_url=rtsp://169.254.140.61:554', { method: 'GET' });
+  const response = await fetch(`${getLocalApiBaseUrl()}/capture-image?mode=rtsp&rtsp_url=rtsp://169.254.140.61:554`, { method: 'GET' });
   if (!response.ok) throw new Error('Failed to capture image');
   const data = await response.json();
   if (!data.success || !data.image_url) throw new Error('Capture failed');
