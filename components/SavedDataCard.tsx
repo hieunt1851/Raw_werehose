@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { SavedItem } from '@/types';
-import { Eye, Trash2, AlertTriangle } from 'lucide-react';
+import { Eye, Trash2, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 import { SavedItemDetailModal } from './SavedItemDetailModal';
 import { removeProductPOResult } from '@/services/remoteApi';
 
@@ -23,6 +23,7 @@ interface SavedDataCardProps {
 export function SavedDataCard({ savedItems, onDeleteItem, externalSavedItems = [], externalProductInfo }: SavedDataCardProps) {
   const [selectedItem, setSelectedItem] = useState<SavedItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   const groupedItems = savedItems.reduce((acc, item, index) => {
     const key = item.material.slug;
@@ -32,6 +33,13 @@ export function SavedDataCard({ savedItems, onDeleteItem, externalSavedItems = [
     acc[key].push({ ...item, originalIndex: index });
     return acc;
   }, {} as Record<string, (SavedItem & { originalIndex: number })[]>);
+
+  const toggleGroup = (slug: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [slug]: !prev[slug]
+    }));
+  };
 
   const handleViewDetails = (item: SavedItem) => {
     setSelectedItem(item);
@@ -56,6 +64,10 @@ export function SavedDataCard({ savedItems, onDeleteItem, externalSavedItems = [
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedItem(null);
+  };
+
+  const calculateGroupTotal = (items: (SavedItem & { originalIndex: number })[]) => {
+    return items.reduce((sum, item) => sum + item.quantity, 0);
   };
 
   return (
@@ -181,80 +193,101 @@ export function SavedDataCard({ savedItems, onDeleteItem, externalSavedItems = [
               })()}
             </div>
           ) : Object.keys(groupedItems).length > 0 ? (
-            Object.entries(groupedItems).map(([slug, items]) => (
-              <div key={slug} className="mb-4">
-                <div className="table-responsive">
-                  <table className="table table-bordered">
-                    <thead className="table-light">
-                      <tr>
-                        <th>{items[0].material.code} - {items[0].material.name}</th>
-                        <th className="text-center">Định lượng</th>
-                        <th className="text-center" style={{ fontSize: '10px' }}>
-                          Khác biệt <br/> màu sắc
-                        </th>
-                        <th className="text-center" style={{ width: '120px' }}>
-                          Thao tác
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((item) => (
-                        <tr key={item.originalIndex}>
-                          <td>
-                            <div className="d-flex align-items-center">
-                              <span className="me-2">{item.timestamp.toLocaleString()}</span>
-                              {item.colorDiff > 5 && (
-                                <span title="Cần kiểm tra">
-                                  <AlertTriangle className="text-warning" size={14} />
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="text-center">
-                            <span className={`fw-bold ${Math.abs(item.quantity - item.material.quantity) > 0.1 ? 'text-warning' : 'text-success'}`}>
-                              {item.quantity.toFixed(3)} {item.material.unit}
-                            </span>
-                          </td>
-                          <td className="text-center">
-                            <span className={`fw-bold ${item.colorDiff > 5 ? 'text-danger' : 'text-success'}`}>
-                              {item.colorDiff.toFixed(3)}%
-                            </span>
-                          </td>
-                          <td className="text-center">
-                            <div className="btn-group btn-group-sm" role="group">
-                              <button
-                                type="button"
-                                className="btn btn-outline-primary"
+            <div className="space-y-3">
+              {Object.entries(groupedItems).map(([slug, items]) => {
+                const isExpanded = expandedGroups[slug] ?? true;
+                const totalWeight = calculateGroupTotal(items);
+                return (
+                  <div key={slug} className="saved-data-group">
+                    {/* Group Header */}
+                    <div
+                      className="saved-data-header d-flex align-items-center justify-content-between"
+                      onClick={() => toggleGroup(slug)}
+                    >
+                      <div className="d-flex align-items-center">
+                        {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        <span className="ms-2 fw-bold">
+                          {items[0].material.code} - {items[0].material.name} - Tổng: {totalWeight.toFixed(3)} {items[0].material.unit}
+                        </span>
+                      </div>
+                      <div className="d-flex gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-light"
+                          onClick={e => {
+                            e.stopPropagation();
+                            if (confirm(`Bạn có chắc muốn xóa tất cả dữ liệu của ${items[0].material.name}?`)) {
+                              items.forEach(item => onDeleteItem?.(item.originalIndex));
+                              (window as any).showToast?.('Đã xóa nhóm dữ liệu.', 'success');
+                            }
+                          }}
+                          title="Xóa nhóm này"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    {/* Group Content */}
+                    {isExpanded && (
+                      <div className="p-3">
+                        <div className="d-flex flex-wrap gap-2">
+                          {items.map((item, index) => (
+                            <div key={item.originalIndex} className="saved-data-badge position-relative">
+                              <span
+                                className={`badge rounded-pill px-3 py-2 fs-6 ${
+                                  item.colorDiff > 5 ? 'bg-danger' :
+                                  item.colorDiff > 2 ? 'bg-warning' : 'bg-primary'
+                                } text-white`}
                                 onClick={() => handleViewDetails(item)}
-                                title="Xem chi tiết"
+                                title="Nhấp để xem chi tiết"
+                                style={{ cursor: 'pointer' }}
                               >
-                                <Eye size={14} />
-                              </button>
+                                Lần {index + 1}: {item.quantity.toFixed(3)} {item.material.unit} - {item.colorDiff.toFixed(2)}%
+                              </span>
                               <button
                                 type="button"
-                                className="btn btn-outline-danger"
-                                onClick={() => handleDeleteItem(item.originalIndex)}
+                                className="position-absolute bg-danger border-0 rounded-circle d-flex align-items-center justify-content-center text-white"
+                                style={{
+                                  width: '18px',
+                                  height: '18px',
+                                  fontSize: '10px',
+                                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                                  zIndex: 10,
+                                  top: '-6px',
+                                  right: '-6px',
+                                  transform: 'none'
+                                }}
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleDeleteItem(item.originalIndex);
+                                }}
                                 title="Xóa mục này"
                               >
-                                <Trash2 size={14} />
+                                <svg
+                                  width="8"
+                                  height="8"
+                                  viewBox="0 0 12 12"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M9 3L3 9M3 3L9 9"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
                               </button>
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {/* Sum row */}
-                      <tr>
-                        <td className="fw-bold text-end">Tổng</td>
-                        <td className="fw-bold text-center">
-                          {items.reduce((sum, item) => sum + item.quantity, 0).toFixed(3)} {items[0].material.unit}
-                        </td>
-                        <td colSpan={2}></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ))
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             <div className="text-center text-muted">
               <div className="py-4">
@@ -266,7 +299,6 @@ export function SavedDataCard({ savedItems, onDeleteItem, externalSavedItems = [
           )}
         </div>
       </div>
-
       <SavedItemDetailModal
         item={selectedItem}
         isOpen={isModalOpen}

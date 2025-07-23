@@ -115,3 +115,52 @@ button svg {
   max-height: 260px;
   overflow-x: hidden;
 }
+
+/* --- Saved data card/group/badge styles from design.css --- */
+.space-y-3 > * + * {
+  margin-top: 0.75rem;
+}
+
+.user-select-none {
+  user-select: none;
+}
+
+.saved-data-group {
+  border: 2px solid #333;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.saved-data-header {
+  background-color: #333;
+  color: white;
+  padding: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.saved-data-badge {
+  position: relative;
+  display: inline-block;
+  margin: 0.25rem;
+}
+
+.saved-data-badge .badge {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saved-data-badge .badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.saved-data-badge .position-absolute {
+  transition: all 0.2s ease;
+  opacity: 0.9;
+}
+
+.saved-data-badge:hover .position-absolute {
+  opacity: 1;
+  transform: translate(50%, -50%) scale(1.1);
+}
