@@ -348,9 +348,7 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
       // --- End local analysis API ---
 
       // Use live weight if available, else fallback
-      let usedWeight = (parseFloat(weight) ? parseFloat(weight) / 1000 : undefined) || (predictedMaterial.quantity + (Math.random() - 0.5) * 0.2);
-      usedWeight = Number(usedWeight.toFixed(3));
-
+      let usedWeight = (parseFloat(weight) ? parseFloat(weight) / 1000 : undefined) || (predictedMaterial.quantity + (Math.random() - 0.512) * 0.212);
       // Create analysis result
       const newAnalysis: PhotoAnalysis = {
         predictedMaterial: predictedMaterial,
@@ -636,7 +634,7 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
             </div>
             <div className="d-flex justify-content-between mt-2">
               <div>Định lượng</div>
-              <div className="fw-bold">{analysis.quantity.toFixed(2)} {analysis.predictedMaterial.unit}</div>
+              <div className="fw-bold">{analysis.quantity.toFixed(3)} {analysis.predictedMaterial.unit}</div>
             </div>
             <div className="d-flex justify-content-between mt-2">
               <div>Khác biệt màu sắc</div>
