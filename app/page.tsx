@@ -88,13 +88,14 @@ export default function Home() {
             hasSavedItems={savedItems.length > 0}
           />
           
-           <div className="mt-2">
+           
+        </div>
+        <div className="mt-2">
             <SavedDataCard 
               savedItems={savedItems} 
               onDeleteItem={deleteSavedItem}
             />
            </div>
-        </div>
       </div>
       
       <ToastContainer />

@@ -349,6 +349,7 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
 
       // Use live weight if available, else fallback
       let usedWeight = (parseFloat(weight) ? parseFloat(weight) / 1000 : undefined) || (predictedMaterial.quantity + (Math.random() - 0.5) * 0.2);
+      usedWeight = Number(usedWeight.toFixed(3));
 
       // Create analysis result
       const newAnalysis: PhotoAnalysis = {
