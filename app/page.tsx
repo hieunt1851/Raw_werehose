@@ -61,7 +61,7 @@ export default function Home() {
           <i className="fas fa-cog me-2"></i> Cài đặt cân
         </button>
       </div>
-      <h2 className="mb-2">
+      <h2 className="mb-2 d-none">
         <Warehouse className="me-2" size={24} />
         AI SYSTEM
       </h2>
@@ -87,12 +87,12 @@ export default function Home() {
             hasSavedItems={savedItems.length > 0}
           />
           
-          <div className="mt-4">
+           <div className="mt-2">
             <SavedDataCard 
               savedItems={savedItems} 
               onDeleteItem={deleteSavedItem}
             />
-          </div>
+           </div>
         </div>
       </div>
       

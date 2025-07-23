@@ -186,7 +186,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
       <div className="card">
         <div className="card-header">
           <div className="d-flex justify-content-between">
-            <h5 className="card-title">Thông tin nhà cung cấp</h5>
+            <h5 className="card-title">Nhà cung cấp</h5>
             <div className="d-flex gap-2">
               {/*
               <div className="d-flex align-items-center gap-2">
@@ -201,16 +201,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
                 />
               </div>
               */}
-              <button 
-                type="button" 
-                className="btn btn-sm btn-outline-secondary" 
-                onClick={refreshPurchaseOrders}
-                disabled={loading}
-                title="Refresh orders"
-              >
-                <RefreshCw className={`me-1 ${loading ? 'animate-spin' : ''}`} size={16} />
-                {loading ? 'Loading...' : 'Refresh'}
-              </button>
+              
               <select 
                 name="ncc" 
                 className="form-select" 
@@ -225,11 +216,23 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
                   </option>
                 ))}
               </select>
+
+              <button 
+                type="button" 
+                className="btn btn-sm btn-outline-secondary" 
+                onClick={refreshPurchaseOrders}
+                disabled={loading}
+                title="Refresh orders"
+              >
+                <RefreshCw size={16} />
+                {/* <RefreshCw className={`me-1 ${loading ? 'animate-spin' : ''}`} size={16} /> */}
+                {/* {loading ? 'Loading...' : 'Refresh'} */}
+              </button>
             </div>
           </div>
         </div>
         
-        <div className="card-body">
+        <div className="card-body pt-0 pb-1">
           {error && (
             <div className="alert alert-danger mb-3">
               <strong>Error loading orders:</strong> {error}
@@ -286,7 +289,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
               )}
 
               {apiOrders.length > 0 && (
-                <div className="d-flex justify-content-between mt-1">
+                <div className="d-flex justify-content-between mt-1 d-none">
                   <div>Số đơn hàng</div>
                   <div className="fw-bold">{apiOrders.length}</div>
                 </div>
@@ -296,7 +299,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
         </div>
       </div>
 
-      <div className="card mt-4">
+      <div className="card mt-2">
         <div className="card-header">
           <div className="d-flex justify-content-between">
             <h5 className="card-title">Thông tin đơn hàng</h5>
@@ -312,19 +315,18 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
           </div>
         </div>
         
-        <div className="card-body">
+        <div className="card-body card_order">
           {apiOrderItems.length > 0 ? (
             <div className="table-responsive">
               <table className="table table-bordered">
                 <thead className="table-light">
                   <tr>
                     <th className="text-center">STT</th>
-                    <th className="text-center">Mã SP</th>
-                    <th className="text-center">Tên sản phẩm</th>
-                    <th className="text-center">Định lượng</th>
-                    <th className="text-center">Đơn vị</th>
-                    <th className="text-center" >
-                      Sai số<br/>cho phép (%)
+                    <th className="text-center">Sản phẩm</th>
+                    <th className="text-center">Định<br/>lượng</th>
+                    <th className="text-center">Đơn<br/>vị</th>
+                    <th className="text-center fs_sm">
+                      Sai số<br/>cho phép
                     </th>
                   </tr>
                 </thead>
@@ -332,11 +334,11 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
                   {apiOrderItems.map((item: any, index: number) => (
                     <tr key={`${item.product_id}-${index}`}>
                       <td className="text-center">{index + 1}</td>
-                      <td className="text-center text-primary cursor-pointer" style={{textDecoration: 'underline'}} onClick={() => handleProductCellClick(productIdToPoId[item.product_id], item.product_id, item.product_code, item.product_name)}>{item.product_code}</td>
-                      <td className="text-center">{item.product_name}</td>
+                      {/* <td className="text-primary cursor-pointer" onClick={() => handleProductCellClick(productIdToPoId[item.product_id], item.product_id, item.product_code, item.product_name)}>{item.product_code + ' - ' + item.product_name}</td> */}
+                      <td>{item.product_code + ' - ' + item.product_name}</td>
                       <td className="text-center">{parseFloat(item.quantity).toFixed(2)}</td>
                       <td className="text-center">{item.unit_name}</td>
-                      <td className="text-center">{item.product_diff_allowed || '-'}</td>
+                      <td className="text-center">{parseInt(item.product_diff_allowed) ? parseInt(item.product_diff_allowed) + '%' : '-'}</td>
                     </tr>
                   ))}
                 </tbody>

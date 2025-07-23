@@ -575,7 +575,7 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
         </div>
       </div>
       
-      <div className="card-body">
+      <div className="card-body pb-1 pt-0 pe-1 ps-1">
         {!analysis ? (
           <div className="img_photo">
             <img 
@@ -602,11 +602,11 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
           </div>
         ) : (
           <div className="img_stats">
-            <div className="d-flex justify-content-between">
+            <div className="d-flex justify-content-between d-none">
               <h5 className="card-title">Kết quả phân tích AI</h5>
             </div>
 
-            <div className="d-flex justify-content-between mt-2">
+            <div className="d-flex justify-content-between">
               <div className="w-50">
                 <div className="text-center fw-bold">Hình chuẩn</div>
                 <div className="p-2">
@@ -689,7 +689,7 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
       <div className="card-footer">
         <div className="d-flex justify-content-between">
           <div></div>
-          <button type="button" className="btn btn-dark" onClick={() => setShowSaveAllModal(true)}>
+          <button type="button" className="btn btn-sm btn-dark" onClick={() => setShowSaveAllModal(true)}>
             <i className="fas fa-save me-2"></i>
             Hoàn tất quy trình
           </button>
