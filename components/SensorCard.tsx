@@ -140,7 +140,7 @@ function SaveAllModal({ show, onClose, savedItems, apiOrders }: { show: boolean;
                       </td>
                       <td className="text-center">
                         <span className={`fw-bold ${Math.abs(item.totalQuantity - item.material.quantity * item.count) > 0.1 * item.count ? 'text-warning' : 'text-success'}`}>
-                          {item.totalQuantity.toFixed(2)}
+                          {item.totalQuantity.toFixed(3)}
                         </span>
                       </td>
                       <td className="text-center">
@@ -230,7 +230,7 @@ export function SensorCard({ currentSupplier, onPhotoAnalysis, apiOrderItems = [
       quantity: parseFloat(item.quantity),
       diff: parseFloat(item.product_diff_allowed) || 2,
       slug: item.product_code.toLowerCase().replace(/\s+/g, '_'),
-      between: `${(parseFloat(item.quantity) * 0.98).toFixed(2)} -> ${(parseFloat(item.quantity) * 1.02).toFixed(2)}`,
+      between: `${(parseFloat(item.quantity) * 0.98).toFixed(3)} -> ${(parseFloat(item.quantity) * 1.02).toFixed(3)}`,
       real: parseFloat(item.quantity),
       product_photo: (item.product_photo && !item.product_photo.includes('no_photo.png')) ? item.product_photo : '/images/no_photo.png'
     };

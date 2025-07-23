@@ -154,7 +154,7 @@ export function SavedDataCard({ savedItems, onDeleteItem, externalSavedItems = [
                               </td>
                               <td className="text-center">
                                 <span className="fw-bold text-success">
-                                  {item.totalQuantity.toFixed(2)}
+                                  {item.totalQuantity.toFixed(3)}
                                 </span>
                               </td>
                               <td className="text-center">
@@ -212,12 +212,12 @@ export function SavedDataCard({ savedItems, onDeleteItem, externalSavedItems = [
                           </td>
                           <td className="text-center">
                             <span className={`fw-bold ${Math.abs(item.quantity - item.material.quantity) > 0.1 ? 'text-warning' : 'text-success'}`}>
-                              {item.quantity.toFixed(2)} {item.material.unit}
+                              {item.quantity.toFixed(3)} {item.material.unit}
                             </span>
                           </td>
                           <td className="text-center">
                             <span className={`fw-bold ${item.colorDiff > 5 ? 'text-danger' : 'text-success'}`}>
-                              {item.colorDiff.toFixed(2)}%
+                              {item.colorDiff.toFixed(3)}%
                             </span>
                           </td>
                           <td className="text-center">
@@ -246,7 +246,7 @@ export function SavedDataCard({ savedItems, onDeleteItem, externalSavedItems = [
                       <tr>
                         <td className="fw-bold text-end">Tổng</td>
                         <td className="fw-bold text-center">
-                          {items.reduce((sum, item) => sum + item.quantity, 0).toFixed(2)} {items[0].material.unit}
+                          {items.reduce((sum, item) => sum + item.quantity, 0).toFixed(3)} {items[0].material.unit}
                         </td>
                         <td colSpan={2}></td>
                       </tr>

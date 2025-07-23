@@ -58,7 +58,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
           quantity: parseFloat(item.quantity),
           diff: 2,
           slug: item.product_code.toLowerCase().replace(/\s+/g, '_'),
-          between: `${(parseFloat(item.quantity) * 0.98).toFixed(2)} -> ${(parseFloat(item.quantity) * 1.02).toFixed(2)}`,
+          between: `${(parseFloat(item.quantity) * 0.98).toFixed(3)} -> ${(parseFloat(item.quantity) * 1.02).toFixed(3)}`,
           real: parseFloat(item.quantity),
           product_photo: item.product_photo
         }));
@@ -79,7 +79,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
           quantity: parseFloat(item.quantity),
           diff: 2,
           slug: item.product_code.toLowerCase().replace(/\s+/g, '_'),
-          between: `${(parseFloat(item.quantity) * 0.98).toFixed(2)} -> ${(parseFloat(item.quantity) * 1.02).toFixed(2)}`,
+          between: `${(parseFloat(item.quantity) * 0.98).toFixed(3)} -> ${(parseFloat(item.quantity) * 1.02).toFixed(3)}`,
           real: parseFloat(item.quantity),
           product_photo: item.product_photo
         }));
@@ -105,7 +105,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
           quantity: parseFloat(item.quantity),
           diff: 2,
           slug: item.product_code.toLowerCase().replace(/\s+/g, '_'),
-          between: `${(parseFloat(item.quantity) * 0.98).toFixed(2)} -> ${(parseFloat(item.quantity) * 1.02).toFixed(2)}`,
+          between: `${(parseFloat(item.quantity) * 0.98).toFixed(3)} -> ${(parseFloat(item.quantity) * 1.02).toFixed(3)}`,
           real: parseFloat(item.quantity),
           product_photo: item.product_photo
         }));
@@ -336,7 +336,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
                       <td className="text-center">{index + 1}</td>
                       {/* <td className="text-primary cursor-pointer" onClick={() => handleProductCellClick(productIdToPoId[item.product_id], item.product_id, item.product_code, item.product_name)}>{item.product_code + ' - ' + item.product_name}</td> */}
                       <td>{item.product_code + ' - ' + item.product_name}</td>
-                      <td className="text-center">{parseFloat(item.quantity).toFixed(2)}</td>
+                      <td className="text-center">{parseFloat(item.quantity).toFixed(3)}</td>
                       <td className="text-center">{item.unit_name}</td>
                       <td className="text-center">{parseInt(item.product_diff_allowed) ? parseInt(item.product_diff_allowed) + '%' : '-'}</td>
                     </tr>
@@ -367,7 +367,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
                     >
                       <td className="text-center">{material.id}</td>
                       <td className="text-center">{material.code} - {material.name}</td>
-                      <td className="text-center">{material.quantity.toFixed(2)}</td>
+                      <td className="text-center">{material.quantity.toFixed(3)}</td>
                       <td className="text-center">{material.unit}</td>
                       <td className="text-center">{material.diff}</td>
                     </tr>
@@ -429,7 +429,7 @@ export function SupplierCard({ currentSupplier, onSupplierChange, onMaterialsCha
                                   <td>{idx + 1}</td>
                                   <td>{item.product_id}</td>
                                   <td>{item.product_name}</td>
-                                  <td>{parseFloat(item.quantity).toFixed(2)}</td>
+                                  <td>{parseFloat(item.quantity).toFixed(3)}</td>
                                   <td>{item.unit_name}</td>
                                 </tr>
                               ))}

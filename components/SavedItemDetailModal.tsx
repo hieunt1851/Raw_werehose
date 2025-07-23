@@ -78,7 +78,7 @@ export function SavedItemDetailModal({ item, isOpen, onClose }: SavedItemDetailM
                         <div className="mb-3">
                           <strong>Định lượng thực tế:</strong>
                           <div className="text-success fw-bold">
-                            {item.quantity.toFixed(2)} {item.material.unit}
+                            {item.quantity.toFixed(3)} {item.material.unit}
                           </div>
                         </div>
                         <div className="mb-3">
@@ -163,10 +163,10 @@ export function SavedItemDetailModal({ item, isOpen, onClose }: SavedItemDetailM
                             <div className="text-center">
                               <div className="h4 mb-1">Định lượng</div>
                               <div className={`h5 ${Math.abs(item.quantity - item.material.quantity) > 0.1 ? 'text-warning' : 'text-success'}`}>
-                                {item.quantity.toFixed(2)} {item.material.unit}
+                                {item.quantity.toFixed(3)} {item.material.unit}
                               </div>
                               <small className="text-muted">
-                                Chuẩn: {item.material.quantity.toFixed(2)} {item.material.unit}
+                                Chuẩn: {item.material.quantity.toFixed(3)} {item.material.unit}
                               </small>
                             </div>
                           </div>
