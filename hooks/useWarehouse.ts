@@ -11,7 +11,6 @@ export function useWarehouse() {
   const handleSupplierChange = useCallback((supplier: string) => {
     setCurrentSupplier(supplier);
   }, []);
-
   const handleMaterialsChange = useCallback((materials: RawMaterial[]) => {
     setCurrentMaterials(materials);
   }, []);

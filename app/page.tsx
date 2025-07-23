@@ -53,6 +53,7 @@ export default function Home() {
 
   const apiOrders = getApiOrdersForSupplier();
   const apiOrderItems = getApiOrderItemsForSupplier();
+  console.log(".");
 
   return (
     <div className="container mt-2 mb-2">
