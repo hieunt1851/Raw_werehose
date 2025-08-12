@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
   images: {
     domains: ['localhost', 'tastevn-ai-services.ig3.ai'],
   },
@@ -25,6 +22,15 @@ const nextConfig = {
         destination: 'https://tastevn-ai-services.ig3.ai/captures/:path*',
       },
     ];
+  },
+  // Optimize build process
+  swcMinify: true,
+  // Disable telemetry during build
+  telemetry: false,
+  // Optimize webpack
+  webpack: (config, { dev, isServer }) => {
+    // Add any webpack optimizations here if needed
+    return config;
   },
 }
 
